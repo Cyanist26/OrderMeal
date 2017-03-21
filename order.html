@@ -38,21 +38,17 @@
           .getUserInfo();
           
         function showUserInfo(info) {       
-          $("#userInfo").html( 
-            "<p><strong>當前用戶信息：</strong></p>" + 
-            "<table class=\"am-table am-table-radius am-table-bordered am-table-centered am-table-compact\">" +  
-            "<tr><th>事業部</th><th>部門</th><th>姓名</th></tr>" + 
-            "<tr><td>" + info.division + 
-            "</td><td>" + info.department + 
-            "</td><td id=\"name\">" + info.name + 
-            "</td></tr></table>");
+          $("#division").html("<strong>"+info.division+"</strong>");
+          $("#department").html("<strong>"+info.department+"</strong>");
+          $("#name").html("<strong>"+info.name+"</strong>");
           $('#userInfo').fadeIn("slow");
           
           /* 填充訂餐日期及菜單 */
           google.script.run
             .withSuccessHandler(showDateAndMenu)
             .withFailureHandler(function (error) {
-              alert("ERROR: " + error.message);
+                $("#menuGroup").text("ERROR: " + error.message);
+                $('#menuGroup').fadeIn("slow");
               })
             .getFormatedDateAndMenu(info.name);
         } 
@@ -60,11 +56,23 @@
         function showDateAndMenu(formatedDateAndMenu) {
           for( var key = 0, i = 1; key < 6; key++, i++ )
           {
+            /* 當天是否有已選項 */
             var haveSelection = false;
+            /* 加載日期 */
             $("#date" + i).text(formatedDateAndMenu[key][0] + " " + formatedDateAndMenu[key][1]);
             for( var col = 2; col < 7; col++ )
             {
-              if( formatedDateAndMenu[key][col] == "休" )//休息日
+              /* 當前菜式 */
+              var menu = formatedDateAndMenu[key][col];
+              /* 當前菜式總數 */
+              var menuTotal = formatedDateAndMenu[key][col + 5];
+              /* 當前菜式已訂數 */
+              var menuNow = formatedDateAndMenu[key][col + 10];
+              /* 已選菜式 */
+              var menuSelected = formatedDateAndMenu[key][17];
+              
+              /* 休息日 */
+              if( menu == "休" )
               {
                 $("#day" + i + "menu" + (col - 1)).text("休息不点餐~");
                 $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
@@ -72,7 +80,8 @@
                 $("#day" + i + "value" + (col - 1)).uCheck('disable');
                 continue;
               }
-              else if( formatedDateAndMenu[key][col] == "" )//菜式為空白
+              /* 菜式為空白 */
+              else if( menu == "" )
               {
                 $("#day" + i + "menu" + (col - 1)).text("敬請期待~");
                 $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
@@ -80,18 +89,21 @@
                 $("#day" + i + "value" + (col - 1)).uCheck('disable');
                 continue;
               }
-              else if( eval(formatedDateAndMenu[key][col + 5]) <= eval(formatedDateAndMenu[key][col + 10]) )//已定滿
+              /* 已訂滿 */
+              else if( eval(menuTotal) <= eval(menuNow) )
               {
-                if( formatedDateAndMenu[key][col] == formatedDateAndMenu[key][17] )//訂滿項為已選項
+                /* 訂滿項為已選項 */
+                if( menu == menuSelected )
                 {
-                  $("#day" + i + "menu" + (col - 1)).html("<strong>"+formatedDateAndMenu[key][col]+"</strong>");
+                  $("#day" + i + "menu" + (col - 1)).html("<strong>" + menu + "(" + menuNow + "/" + menuTotal + ")" + "</strong>");
                   $("#day" + i + "menu" + (col - 1)).attr('class','am-text-success am-text-lg');
-                  $("#day" + i + "value" + (col - 1)).attr("value",(col - 1) + formatedDateAndMenu[key][col]);
+                  $("#day" + i + "value" + (col - 1)).attr("value",(col - 1) + menu);
                   $("#day" + i + "value" + (col - 1)).uCheck('check');
                   haveSelection = true;
                   continue;
                 }
-                else//訂滿項不是已選項
+                /* 訂滿項不是已選項 */
+                else
                 {
                   $("#day" + i + "menu" + (col - 1)).text("訂滿了~明日請早！");
                   $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
@@ -100,21 +112,22 @@
                   continue;
                 }
               }
-              else//可選且不為已選項
+              /* 可選且不是已選項 */
+              else
               {
-                $("#day" + i + "menu" + (col - 1)).html("<strong>"+formatedDateAndMenu[key][col]+"</strong>");
-                //$("#day" + i + "menu" + (col - 1)).text(formatedDateAndMenu[key][col]);
+                $("#day" + i + "menu" + (col - 1)).html("<strong>" + menu + "(" + menuNow + "/" + menuTotal + ")" + "</strong>");
                 $("#day" + i + "menu" + (col - 1)).attr('class','am-text-success am-text-lg');
-                $("#day" + i + "value" + (col - 1)).attr("value",(col - 1) + formatedDateAndMenu[key][col]);
+                $("#day" + i + "value" + (col - 1)).attr("value",(col - 1) + menu);
                 
-                if( formatedDateAndMenu[key][col] == formatedDateAndMenu[key][17] )//可選且為已選項
+                /* 可選且為已選項 */
+                if( menu == menuSelected )
                 {
                   $("#day" + i + "value" + (col - 1)).uCheck('check');
                   haveSelection = true;
                 }
               }
             }
-            //默認選擇不訂
+            /* 沒有已選項時選擇不訂 */
             if( !haveSelection ) $("#day" + i + "value0").uCheck('check');
           }
           $('#menuGroup').fadeIn("slow");
@@ -139,11 +152,9 @@
             google.script.run
               .withSuccessHandler(submitSuccess)
               .withFailureHandler(submitFailed)
+              .withUserObject($btn)
               .submitOrder(orderResult);
               
-            setTimeout(function(){
-              $btn.button('reset');
-            }, 500);
           }
           catch(e){
             alert(e.toString());
@@ -151,21 +162,27 @@
         }
       
       /* 訂餐成功顯示信息并更新radio */
-        function submitSuccess() {
+        function submitSuccess(result, $btn) {
           $("#ordresult").text("訂餐成功");
           $("#ordresult").fadeIn("fast");
           $("input[value!='false']").uCheck('enable');
+          $btn.button('reset');
+          var $w = $(window);
+          $w.smoothScroll({position: $(document).height() - $w.height()});
           
           setTimeout(function(){
             $("#ordresult").fadeOut("slow");
-          }, 5000);
+          }, 2000);
         }
       
       /* 訂餐失敗顯示信息并更新radio */
-        function submitFailed(error) {
-          $("#ordresult").text("訂餐失敗，聽我解釋："+error.message);
+        function submitFailed(error, $btn) {
+          $("#ordresult").text("訂餐失敗，聽我解釋T^T："+error.message);
           $("#ordresult").fadeIn("slow");
           $("input[value!='false']").uCheck('enable');
+          $btn.button('reset');
+          var $w = $(window);
+          $w.smoothScroll({position: $(document).height() - $w.height()});
           
           setTimeout(function(){
             $("#ordresult").fadeOut("slow");
@@ -200,15 +217,31 @@
   </head>
   
   <body onload="load()">
-    <div id="time">Time Loading...</div>
-    <div id="userInfo" style="display:none;">Loading...</div>
+    <!-- 刷新當前時間 -->
+    <div id="time" class="am-text-center">Time Loading...</div>
+    <hr />
     
-    <div id="menuGroup" style="display:none;">
-      <table class="am-table am-text-left am-table-compact am-text-lg">
-        <tr>
-          <td id="day1">
-            <div class="am-g">
-                <h3 id="date1">Date Loading...</h3>
+    <!-- 加載用戶信息 -->
+    <div id="userInfo" style="display:none;">
+      <div class="am-g am-text-center">
+        <div class="am-u-sm-4">事業部</div>
+        <div class="am-u-sm-4">部門</div>
+        <div class="am-u-sm-4">姓名</div>
+      </div>
+      <div class="am-g am-text-center">
+        <div class="am-u-sm-4" id="division"></div>
+        <div class="am-u-sm-4" id="department"></div>
+        <div class="am-u-sm-4" id="name"></div>
+      </div>
+    </div>
+    <hr />
+    
+    <!-- 加載菜單信息 -->
+    <div id="menuGroup" style="display:none;" class="am-container">
+      <div class="am-g">
+          <!-- day1 -->
+          <div class="am-u-sm-4" id="day1">
+            <h2 id="date1"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day1ord" value="0none" id="day1value0" data-am-ucheck>
                   <span id="day1menu0">不訂</span>
@@ -233,11 +266,11 @@
                   <input type="radio" name="day1ord" value="" id="day1value5" data-am-ucheck >
                   <span id="day1menu5"></span>
                 </label>
-            </div>
-          </td>
-          <td id="day2">
-            <div class="am-g">
-                <h3 id="date2">Date Loading...</h3>
+          </div>
+          <!-- day1end -->
+          <!-- day2 -->
+          <div class="am-u-sm-4" id="day2">
+              <h2 id="date2"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day2ord" value="0none" id="day2value0" data-am-ucheck>
                   <span id="day2menu0">不訂</span>
@@ -262,11 +295,11 @@
                   <input type="radio" name="day2ord" value="" id="day2value5" data-am-ucheck>
                   <span id="day2menu5"></span>
                 </label>
-            </div>
-          </td>
-          <td id="day3">
-            <div class="am-g">
-                <h3 id="date3">Date Loading...</h3>
+          </div>
+          <!-- day2end -->
+          <!-- day3 -->
+          <div class="am-u-sm-4" id="day3">
+              <h2 id="date3"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day3ord" value="0none" id="day3value0" data-am-ucheck>
                   <span id="day3menu0">不訂</span>
@@ -291,14 +324,14 @@
                   <input type="radio" name="day3ord" value="" id="day3value5" data-am-ucheck>
                   <span id="day3menu5"></span>
                 </label>
-            </div>
-          </td>
-        </tr>
+          </div>
+          <!-- day3end -->
+        </div>
         
-        <tr>         
-          <td id="day4">
-            <div class="am-g">
-                <h3 id="date4">Date Loading...</h3>
+      <div class="am-g">  
+          <!-- day4 -->
+          <div class="am-u-sm-4" id="day4">
+              <h2 id="date4"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day4ord" value="0none" id="day4value0" data-am-ucheck>
                   <span id="day4menu0">不訂</span>
@@ -323,11 +356,11 @@
                   <input type="radio" name="day4ord" value="" id="day4value5" data-am-ucheck>
                   <span id="day4menu5"></span>
                 </label>
-            </div>
-          </td>
-          <td id="day5">
-            <div class="am-g">
-                <h3 id="date5">Date Loading...</h3>
+          </div>
+          <!-- day4end -->
+          <!-- day5 -->
+          <div class="am-u-sm-4" id="day5">
+              <h2 id="date5"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day5ord" value="0none" id="day5value0" data-am-ucheck>
                   <span id="day5menu0">不訂</span>
@@ -352,11 +385,11 @@
                   <input type="radio" name="day5ord" value="" id="day5value5" data-am-ucheck>
                   <span id="day5menu5"></span>
                 </label>
-            </div>
-          </td>
-          <td id="day6">
-            <div class="am-g">
-                <h3 id="date6">Date Loading...</h3>
+          </div>
+          <!-- day5end -->
+          <!-- day6 -->
+          <div class="am-u-sm-4" id="day6">
+              <h2 id="date6"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day6ord" value="0none" id="day6value0" data-am-ucheck>
                   <span id="day6menu0">不訂</span>
@@ -381,20 +414,19 @@
                   <input type="radio" name="day6ord" value="" id="day6value5" data-am-ucheck>
                   <span id="day6menu5"></span>
                 </label>
-            </div>
-          </td>
-        </tr>
-
-      </table>
+          </div>
+          <!-- day6end -->
+      </div>    
     </div>
- 
+    
     <button type="button" class="am-btn am-btn-success am-radius am-btn-block am-disabled" 
-            data-am-loading="{spinner: 'spinner', loadingText: '努力訂餐中...', resetText: '確定訂餐'}"
+            data-am-loading="{spinner: 'spinner', loadingText: '已經在努力訂餐了...', resetText: '我要再訂'}"
             style="display:none;"
             id="btn-submitOrder">
             確定訂餐
     </button>
     
     <div id="ordresult" class="am-text-center am-text-default"></div>
+    
   </body>
 </html>
