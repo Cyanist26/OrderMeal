@@ -7,11 +7,15 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/amazeui/2.7.2/css/amazeui.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/amazeui/2.7.2/js/amazeui.min.js"></script>  
     
-    <!-- 修正.am-radio的錯誤margin -->
+    
     <style>
+    <!-- 修正.am-radio的錯誤margin -->
       .am-radio input[type=radio]{
         margin-left:0px;
         margin-top:0px;
+      }
+      hr{
+        margin:10px;
       }
     </style>
     
@@ -222,7 +226,7 @@
     <hr />
     
     <!-- 加載用戶信息 -->
-    <div id="userInfo" style="display:none;">
+    <div id="userInfo" style="display:none;width:400px;" class="am-container">
       <div class="am-g am-text-center">
         <div class="am-u-sm-4">事業部</div>
         <div class="am-u-sm-4">部門</div>
@@ -237,10 +241,10 @@
     <hr />
     
     <!-- 加載菜單信息 -->
-    <div id="menuGroup" style="display:none;" class="am-container">
+    <div id="menuGroup" style="display:none;">
       <div class="am-g">
           <!-- day1 -->
-          <div class="am-u-sm-4" id="day1">
+          <div class="am-u-lg-4" id="day1">
             <h2 id="date1"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day1ord" value="0none" id="day1value0" data-am-ucheck>
@@ -269,7 +273,7 @@
           </div>
           <!-- day1end -->
           <!-- day2 -->
-          <div class="am-u-sm-4" id="day2">
+          <div class="am-u-lg-4" id="day2">
               <h2 id="date2"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day2ord" value="0none" id="day2value0" data-am-ucheck>
@@ -298,7 +302,7 @@
           </div>
           <!-- day2end -->
           <!-- day3 -->
-          <div class="am-u-sm-4" id="day3">
+          <div class="am-u-lg-4" id="day3">
               <h2 id="date3"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day3ord" value="0none" id="day3value0" data-am-ucheck>
@@ -330,7 +334,7 @@
         
       <div class="am-g">  
           <!-- day4 -->
-          <div class="am-u-sm-4" id="day4">
+          <div class="am-u-lg-4" id="day4">
               <h2 id="date4"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day4ord" value="0none" id="day4value0" data-am-ucheck>
@@ -359,7 +363,7 @@
           </div>
           <!-- day4end -->
           <!-- day5 -->
-          <div class="am-u-sm-4" id="day5">
+          <div class="am-u-lg-4" id="day5">
               <h2 id="date5"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day5ord" value="0none" id="day5value0" data-am-ucheck>
@@ -388,7 +392,7 @@
           </div>
           <!-- day5end -->
           <!-- day6 -->
-          <div class="am-u-sm-4" id="day6">
+          <div class="am-u-lg-4" id="day6">
               <h2 id="date6"></h2>
                 <label class="am-radio am-success">
                   <input type="radio" name="day6ord" value="0none" id="day6value0" data-am-ucheck>

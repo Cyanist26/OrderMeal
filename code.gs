@@ -1,9 +1,14 @@
 ﻿try{
   /* 加載當天日期 */
   var today = new Date();
-  /* 10點之後不再加載當天菜式 */
+  /* 加載當天菜式的截止時間 */
   var isDateChanged = false;
-  if ( today.getHours() >= 10 && today.getMinutes() >= 0 ) {today.setDate(today.getDate() + 1 );isDateChanged = true;}
+  if ( (today.getDay() != 6 && today.getHours() >= 9 && today.getMinutes() >= 55) ||
+       (today.getDay() == 6 && today.getHours() >= 10 && today.getMinutes() >= 30) ) 
+  {
+    today.setDate(today.getDate() + 1 );
+    isDateChanged = true;
+  }
   /* 格式化日期 */
   var formatToday = Utilities.formatDate(today, "GMT+8", "yyyy-MM-dd");
   
@@ -33,9 +38,9 @@ function onOpen() {
 function showOrderDialog(){
   try{
     var html = HtmlService.createHtmlOutputFromFile('order')
-      .setWidth(1000)
+      .setWidth(1200)
       .setHeight(550);
-    SpreadsheetApp.getUi().showModalDialog(html, '訂餐');
+    SpreadsheetApp.getUi().showModalDialog(html, '  ');
   }
   catch(e){
     ui.alert(e.toString());
@@ -56,7 +61,7 @@ function getUserInfo(){
 
       if(  leftday == "" )
       {     
-        info = {
+         var info = {
           division : data[emailIndexRow - 1][0],
           department : data[emailIndexRow - 1][1],
           name : data[emailIndexRow - 1][3]
@@ -111,9 +116,11 @@ function submitOrder(orderResult){
     var menuNum = eval(orderResult[1].slice(0,1));
     /* 已定菜式名稱 */
     var menu = orderResult[1].slice(1);
-    /* 提交時已過截止時間 */
-    if ( !isDateChanged && today.getHours() >= 10 ) 
-      throw "吉時已過，無法修改當天訂餐！"
+    /* 提交當天菜式的截止時間 */
+    if ( !isDateChanged && 
+         ((today.getDay() != 6 && today.getHours() >= 9 && today.getMinutes() >= 55) || 
+         (today.getDay() == 6 && today.getHours() >= 10 && today.getMinutes() >= 30)) ) 
+      throw "吉時已過，無法修改當天訂餐！請刷新訂餐表！"
     /* 選擇不訂 */
     else if( menu == "none" ) 
       orderSheet.getRange(nameIndexInOrdRow, todayIndexInOrdCol).clearContent();
