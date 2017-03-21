@@ -1,6 +1,15 @@
 ﻿try{
   /* 加載當天日期 */
   var today = new Date();
+  /* 設置截單時間 */
+  var deadline = new Date();
+  if( today.getDay() != 6 )
+    /* 非週六的截單時間 */
+    deadline.setHours(9,55,0);
+  else
+    /* 週六的截單時間 */
+    deadline.setHours(10,30,0)
+    
   /* 加載當天菜式的截止時間 */
   var isDateChanged = false;
   if ( (today.getDay() != 6 && today.getHours() >= 9 && today.getMinutes() >= 55) ||
@@ -109,6 +118,8 @@ function submitOrder(orderResult){
   var confirmMenuData = hostFile.getSheetByName("參數表").getRange(1, 1, 35, 17).getDisplayValues();
   /* 參數表中日期所在行 */
   var confirmTodayIndexRow = FtofsStandardLibrary.getIndexByContent(true, formatToday, confirmMenuData)[0][0];
+  /* 用於截單的日期對象 */
+  var confirmDate = new Date();
   
   try{
     /* 修改訂餐表day1 */
@@ -117,9 +128,7 @@ function submitOrder(orderResult){
     /* 已定菜式名稱 */
     var menu = orderResult[1].slice(1);
     /* 提交當天菜式的截止時間 */
-    if ( !isDateChanged && 
-         ((today.getDay() != 6 && today.getHours() >= 9 && today.getMinutes() >= 55) || 
-         (today.getDay() == 6 && today.getHours() >= 10 && today.getMinutes() >= 30)) ) 
+    if ( !isDateChanged && ( confirmDate >= deadline ) ) 
       throw "吉時已過，無法修改當天訂餐！請刷新訂餐表！"
     /* 選擇不訂 */
     else if( menu == "none" ) 
