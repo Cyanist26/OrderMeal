@@ -12,8 +12,7 @@
     
   /* 加載當天菜式的截止時間 */
   var isDateChanged = false;
-  if ( (today.getDay() != 6 && today.getHours() >= 9 && today.getMinutes() >= 55) ||
-       (today.getDay() == 6 && today.getHours() >= 10 && today.getMinutes() >= 30) ) 
+  if ( today >= deadline ) 
   {
     today.setDate(today.getDate() + 1 );
     isDateChanged = true;
