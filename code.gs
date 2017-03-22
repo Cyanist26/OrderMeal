@@ -2,17 +2,24 @@
   /* 加載當天日期 */
   var today = new Date();
   /* 設置截單時間 */
-  var deadline = new Date();
-  if( today.getDay() != 6 )
-    /* 非週六的截單時間 */
-    deadline.setHours(9,55,0);
-  else
-    /* 週六的截單時間 */
-    deadline.setHours(10,30,0)
+  var viewDeadline = new Date();
+  var submitDeadline = new Date();
+  if( today.getDay() != 6 ){
+    /* 非週六的查看截止時間 */
+    viewDeadline.setHours(10,15,0);
+    /* 非週六的下單截止時間 */
+    submitDeadline.setHours(9,55,0);
+  }  
+  else{
+    /* 週六的查看截止時間 */
+    viewDeadline.setHours(10,30,0);
+    /* 週六的下單截止時間 */
+    submitDeadline.setHours(10,30,0);
+  }
     
-  /* 加載當天菜式的截止時間 */
+  /* 判斷是否已過查看截止時間 */
   var isDateChanged = false;
-  if ( today >= deadline ) 
+  if ( today >= viewDeadline ) 
   {
     today.setDate(today.getDate() + 1 );
     isDateChanged = true;
@@ -33,12 +40,10 @@ catch(e){
 }
 
 function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  var test = today.getHours();
-  ui
-  .createMenu('FTOFS') 
-  .addItem('訂餐請戳我','showOrderDialog')
-  .addToUi();
+  SpreadsheetApp.getUi()
+    .createMenu('FTOFS') 
+    .addItem('訂餐請戳我','showOrderDialog')
+    .addToUi();
   
   showOrderDialog();
 }
@@ -58,25 +63,33 @@ function showOrderDialog(){
 function getUserInfo(){
   try{ 
     var userEmail = Session.getEffectiveUser().getEmail();
-    var data = SpreadsheetApp.openById("1YMMT1I4LQvypqus_b-AYSyEH-2nKr0L2ah14Y5oz5mw").getSheetByName("花名冊").getDataRange().getDisplayValues();  
-    
-    var emailIndex = FtofsStandardLibrary.getIndexByContent(true, userEmail, data); 
-    
-    for( var i = 0; i < emailIndex.length; i++ )
-    {
-      var emailIndexRow = emailIndex[i][0];
-      var leftday = data[emailIndexRow - 1][6];
-
-      if(  leftday == "" )
-      {     
-         var info = {
-          division : data[emailIndexRow - 1][0],
-          department : data[emailIndexRow - 1][1],
-          name : data[emailIndexRow - 1][3]
-        };       
-        return info;
-      }
+    var cache = CacheService.getScriptCache();
+    var userEmailCached = cache.get(userEmail);
+    if (userEmailCached != null) {
+      return JSON.parse(userEmailCached);
     }
+    else
+    {
+      var data = SpreadsheetApp.openById("1YMMT1I4LQvypqus_b-AYSyEH-2nKr0L2ah14Y5oz5mw").getSheetByName("花名冊").getDataRange().getDisplayValues();  
+      var emailIndex = FtofsStandardLibrary.getIndexByContent(true, userEmail, data); 
+      
+      for( var i = 0; i < emailIndex.length; i++ )
+      {
+        var emailIndexRow = emailIndex[i][0];
+        var leftday = data[emailIndexRow - 1][6];
+        
+        if( leftday == "" )
+        {     
+          var info = {
+            division : data[emailIndexRow - 1][0],
+            department : data[emailIndexRow - 1][1],
+            name : data[emailIndexRow - 1][3]
+          };
+          cache.put(userEmail, JSON.stringify(info), 21600);
+          return info;
+        }
+      }
+    } 
   }
   catch(e){
     throw e;
@@ -127,7 +140,7 @@ function submitOrder(orderResult){
     /* 已定菜式名稱 */
     var menu = orderResult[1].slice(1);
     /* 提交當天菜式的截止時間 */
-    if ( !isDateChanged && ( confirmDate >= deadline ) ) 
+    if ( !isDateChanged && ( confirmDate >= submitDeadline ) ) 
       throw "吉時已過，無法修改當天訂餐！請刷新訂餐表！"
     /* 選擇不訂 */
     else if( menu == "none" ) 
