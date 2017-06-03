@@ -5,9 +5,14 @@
     <base target="_top"> 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/amazeui/2.7.2/css/amazeui.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazeui/2.7.2/js/amazeui.min.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazeui/2.7.2/js/amazeui.min.js"></script>
+      <style>
+      hr{
+        margin:10px;
+      }
+  </style>
   </head>
-  
+
   <body onload="load()">
     <!-- 刷新當前時間 -->
     <div id="time" class="am-text-center">Time Loading...</div>
@@ -27,7 +32,7 @@
       </div>
     </div>
     <hr />
-    
+    <div id="ordresult"></div>
     <!-- 加載菜單信息 -->
     <div id="menuGroup" style="display:none;">
       <div class="am-g">
@@ -218,21 +223,12 @@
             確定訂餐
     </button>
     
-    <div id="ordresult" class="am-text-center am-text-default"></div>
+    
     
   </body>
 </html>
 
-<style>
-    <!-- 修正.am-radio的錯誤margin -->
-      .am-radio input[type=radio]{
-        margin-left:0px;
-        margin-top:0px;
-      }
-      hr{
-        margin:10px;
-      }
-</style>
+
 
 <script>
       function load(){
@@ -251,7 +247,8 @@
               $("#userInfo").text("請使用個人郵箱登陸再訂餐！");
             else
               $("#userInfo").text("ERROR: " + error.message);
-            $('#userInfo').fadeIn("slow");
+              $("#userInfo").attr('style','display:none;');
+              $('#userInfo').fadeIn("slow");
             })
           .getUserInfo();
           
@@ -262,14 +259,19 @@
           $('#userInfo').fadeIn("slow");
           
           /* 填充訂餐日期及菜單 */
+          refreshMenu();
+        } 
+        
+        /* 填充訂餐日期及菜單 */
+        function refreshMenu() {
           google.script.run
             .withSuccessHandler(showDateAndMenu)
             .withFailureHandler(function (error) {
                 $("#menuGroup").text("ERROR: " + error.message);
                 $('#menuGroup').fadeIn("slow");
               })
-            .getFormatedDateAndMenu(info.name);
-        } 
+            .getFormatedDateAndMenu($("#name").text());
+        }
           
         function showDateAndMenu(formatedDateAndMenu) {
           for( var key = 0, i = 1; key < 6; key++, i++ )
@@ -293,7 +295,7 @@
               if( menu == "休" )
               {
                 $("#day" + i + "menu" + (col - 1)).text("休息不点餐~");
-                $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
+                $("#day" + i + "menu" + (col - 1)).attr('class','am-text-default');
                 $("#day" + i + "value" + (col - 1)).attr("value","false");
                 $("#day" + i + "value" + (col - 1)).uCheck('disable');
                 continue;
@@ -302,7 +304,7 @@
               else if( menu == "" )
               {
                 $("#day" + i + "menu" + (col - 1)).text("敬請期待~");
-                $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
+                $("#day" + i + "menu" + (col - 1)).attr('class','am-text-default');
                 $("#day" + i + "value" + (col - 1)).attr("value","false");
                 $("#day" + i + "value" + (col - 1)).uCheck('disable');
                 continue;
@@ -314,7 +316,7 @@
                 if( menu == menuSelected )
                 {
                   $("#day" + i + "menu" + (col - 1)).html("<strong>" + menu + "(" + menuNow + "/" + menuTotal + ")" + "</strong>");
-                  $("#day" + i + "menu" + (col - 1)).attr('class','am-text-success am-text-lg');
+                  $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning am-text-lg');
                   $("#day" + i + "value" + (col - 1)).attr("value",(col - 1) + menu);
                   $("#day" + i + "value" + (col - 1)).uCheck('check');
                   haveSelection = true;
@@ -324,7 +326,7 @@
                 else
                 {
                   $("#day" + i + "menu" + (col - 1)).text("訂滿了~明日請早！");
-                  $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning');
+                  $("#day" + i + "menu" + (col - 1)).attr('class','am-text-default');
                   $("#day" + i + "value" + (col - 1)).attr("value","false");
                   $("#day" + i + "value" + (col - 1)).uCheck('disable');
                   continue;
@@ -341,6 +343,7 @@
                 if( menu == menuSelected )
                 {
                   $("#day" + i + "value" + (col - 1)).uCheck('check');
+                  $("#day" + i + "menu" + (col - 1)).attr('class','am-text-warning am-text-lg');
                   haveSelection = true;
                 }
               }
@@ -381,10 +384,12 @@
       
       /* 訂餐成功顯示信息并更新radio */
         function submitSuccess(result, $btn) {
-          $("#ordresult").text("訂餐成功");
+          $("#ordresult").html("<strong>訂餐成功！</strong>");
+          $("#ordresult").attr('class','am-text-center am-text-lg am-text-warning');
           $("#ordresult").fadeIn("fast");
           $("input[value!='false']").uCheck('enable');
           $btn.button('reset');
+          refreshMenu();
           var $w = $(window);
           $w.smoothScroll({position: $(document).height() - $w.height()});
           
@@ -396,9 +401,11 @@
       /* 訂餐失敗顯示信息并更新radio */
         function submitFailed(error, $btn) {
           $("#ordresult").text("訂餐失敗，聽我解釋T^T："+error.message);
+          $("#ordresult").attr('class','am-text-center am-text-lg am-text-danger');
           $("#ordresult").fadeIn("slow");
           $("input[value!='false']").uCheck('enable');
           $btn.button('reset');
+          refreshMenu();
           var $w = $(window);
           $w.smoothScroll({position: $(document).height() - $w.height()});
           
@@ -406,6 +413,7 @@
             $("#ordresult").fadeOut("slow");
           }, 5000);
         }
+        
       
       /* 刷新當前時間 */
         function showTime(){

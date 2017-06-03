@@ -55,7 +55,7 @@ function getInfo(){
     else{
       var Dict = getDict();
       cache.put("mail-name-cache", Dict.toString(), 21600);
-      Logger.log("put cache succeed");
+//      Logger.log("put cache succeed");
       var info ={   
         email : userEmail,
         name : Dict.getValue(userEmail).toString()
@@ -75,25 +75,31 @@ function onEdit(event){
   if( actSht.getName() == "評論區" ){
     var actRng = event.source.getActiveRange();
     var index = actRng.getRowIndex();
-    var user = getInfo().name;
-    var date = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
-    var userCol = 2;
-    var dateCol = 3;
-    var userCell = actSht.getRange(index,userCol);
-    var dateCell = actSht.getRange(index,dateCol);  
-    userCell.setValue(user);
-    dateCell.setValue(date);
+    var colIndex = actRng.getColumn();
+    if( colIndex == 1 ){
+      var user = getInfo().name;
+      var date = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+      var userCol = 2;
+      var dateCol = 3;
+      var userCell = actSht.getRange(index,userCol);
+      var dateCell = actSht.getRange(index,dateCol);  
+      userCell.setValue(user);
+      dateCell.setValue(date);
+    }
   }
-  else if( actSht.getName() == "這裡有好東西" ){
+  else if( actSht.getName() == "使用說明" ){
     var actRng = event.source.getActiveRange();
     var index = actRng.getRowIndex();
-    var user = getInfo().name;
-    var date = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
-    var userCol = 3;
-    var dateCol = 4;
-    var userCell = actSht.getRange(index,userCol);
-    var dateCell = actSht.getRange(index,dateCol);  
-    userCell.setValue(user);
-    dateCell.setValue(date);
+    var colIndex = actRng.getColumn();
+    if( colIndex == 2 ){
+      var user = getInfo().name;
+      var date = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+      var userCol = 3;
+      var dateCol = 4;
+      var userCell = actSht.getRange(index,userCol);
+      var dateCell = actSht.getRange(index,dateCol);  
+      userCell.setValue(user);
+      dateCell.setValue(date);
+    }
   }
 }
