@@ -32,7 +32,7 @@
       </div>
     </div>
     <hr />
-    <div id="ordresult"></div>
+    
     <!-- 加載菜單信息 -->
     <div id="menuGroup" style="display:none;">
       <div class="am-g">
@@ -215,7 +215,7 @@
           <!-- day6end -->
       </div>    
     </div>
-    
+    <div id="ordresult"></div>
     <button type="button" class="am-btn am-btn-success am-radius am-btn-block am-disabled" 
             data-am-loading="{spinner: 'spinner', loadingText: '已經在努力訂餐了...', resetText: '我要再訂'}"
             style="display:none;"
@@ -231,6 +231,7 @@
 
 
 <script>
+      var openTime = new Date();
       function load(){
         /* 刷新當前時間 */
         showTime();
@@ -258,9 +259,12 @@
           $("#name").html("<strong>"+info.name+"</strong>");
           $('#userInfo').fadeIn("slow");
           
+          /* 记录日志 */
+          google.script.run.myLogger(info.name, "INFO", "打開訂餐页面");
+          
           /* 填充訂餐日期及菜單 */
           refreshMenu();
-        } 
+        }
         
         /* 填充訂餐日期及菜單 */
         function refreshMenu() {
@@ -418,24 +422,30 @@
       /* 刷新當前時間 */
         function showTime(){
           var today = new Date();
-          var year = today.getFullYear(),
-              month = (today.getMonth() + 1),
-              day = today.getDate(),
-              hours = today.getHours(),
-              minutes = today.getMinutes(),
-              seconds = today.getSeconds();
+          if( (today - openTime) > ( 30 * 60 * 1000 ) ) {
+            google.script.run.forcedRefresh($("#name").text());
+          }
+          else {
+            var year = today.getFullYear(),
+                month = (today.getMonth() + 1),
+                day = today.getDate(),
+                hours = today.getHours(),
+                minutes = today.getMinutes(),
+                seconds = today.getSeconds();
               
-          month = checkTime(month);
-          day = checkTime(day);
-          minutes = checkTime(minutes);
-          seconds = checkTime(seconds);
-          $("#time").html("<h2>當前時間: " + year + "年" + month + "月" + day + "日 " + hours + ":" + minutes + ":" + seconds + "</h2>");
+            month = checkTime(month);
+            day = checkTime(day);
+            minutes = checkTime(minutes);
+            seconds = checkTime(seconds);
+            $("#time").html("<h2>當前時間: " + year + "年" + month + "月" + day + "日 " + hours + ":" + minutes + ":" + seconds + "</h2>");
           
-          t = setTimeout(function(){showTime()},1000);
+            t = setTimeout(function(){showTime()},1000);
+          }
         }
         
         function checkTime(i){
           if (i<10) i="0" + i;
           return i;
         }
+        
 </script>

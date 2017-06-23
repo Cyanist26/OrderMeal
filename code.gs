@@ -14,7 +14,7 @@
     /* 週六的查看截止時間 */
     viewDeadline.setHours(10,30,0);
     /* 週六的下單截止時間 */
-    submitDeadline.setHours(10,20,0);
+    submitDeadline.setHours(10,10,0);
   }
     
   /* 判斷是否已過查看截止時間 */
@@ -33,7 +33,7 @@
   var formatToday = Utilities.formatDate(today, "GMT+8", "yyyy-MM-dd");
   
   /* 加載需要使用的文件或表格 */
-  var hostFile = SpreadsheetApp.openById("1ClRplJYKcLJuYS64c2FJj1AmuUQxLpJzHNgV1QaTS6g"); 
+  var hostFile = SpreadsheetApp.openById("15Rsf_dpY9e4I3CiGkDtUySPnQei6EG9lGVENLLXoFFA"); 
   var orderSheet = hostFile.getSheetByName("本月訂餐");
   var orderData = orderSheet.getDataRange().getDisplayValues();  
   
@@ -41,7 +41,6 @@
   var todayIndexInOrdCol = FtofsStandardLibrary.getIndexByContent(true, formatToday, orderData)[0][1];
   
   /* 記錄日誌所需的資源 */
-  var userInfo = getUserInfo();
   var logSheet = SpreadsheetApp.openById("1DcHqkayhEoET1D1L0QzWpCHjV5gOeQcsyflj9pohMxg").getSheetByName("訂餐表日誌");
 }
 catch(e){
@@ -55,15 +54,14 @@ function onOpen() {
     .addItem('訂餐請戳我','showOrderDialog')
     .addToUi();
     
-//  ui.alert("週六截單時間提早到10:20！！");
+//  ui.alert("由于更改了部分设置，如果无法订餐，请及时反馈~");
   showOrderDialog();
-  myLogger("INFO", "打開訂餐表");
 }
 
 function showOrderDialog(){
   try{
     var html = HtmlService.createHtmlOutputFromFile('order')
-      .setWidth(1200)
+      .setWidth(1300)
       .setHeight(550);
     SpreadsheetApp.getUi().showModalDialog(html, '  ');
   }
@@ -75,9 +73,10 @@ function showOrderDialog(){
 function getUserInfo(){
   try{ 
     var userEmail = Session.getEffectiveUser().getEmail();
+    if( userEmail == "" ) return null;
     var cache = CacheService.getScriptCache();
     var userEmailCached = cache.get(userEmail);
-    if ( false/*userEmailCached != null*/ )
+    if ( userEmailCached != null )
     {
       return JSON.parse(userEmailCached);
     }
@@ -91,8 +90,7 @@ function getUserInfo(){
         var emailIndexRow = emailIndex[i][0];
         var leftday = data[emailIndexRow - 1][6];
         var leftdayDate = new Date(leftday.replace(/-/g, "/"));
-        leftdayDate.setMonth(leftdayDate.getMonth() + 1 );
-        leftdayDate.setDate(leftdayDate.getDate() + 1 );
+        leftdayDate.setDate(leftdayDate.getDate() + 2 );
         
         
         if( leftday == "" || today - leftdayDate < 0 )
@@ -153,20 +151,24 @@ function submitOrder(orderResult){
   var confirmTodayIndexRow = FtofsStandardLibrary.getIndexByContent(true, formatToday, confirmMenuData)[0][0];
   /* 用於截單的日期對象 */
   var confirmDate = new Date();
+  var error = "";
   
   try{
     /* 調試模式，屏蔽其他用戶 */
-//    if( Session.getEffectiveUser().getEmail() != "ly@ftofs.info" )
-//       throw "調試中，請稍後~"
-    var error = "";
+//    if( Session.getEffectiveUser().getEmail() != "cwq@ftofs.info" ) {
+//      error += "調試中，請稍後~";
+//      throw error
+//    }
     /* 修改訂餐表day1 */
     /* 已定闡釋序號 */
     var menuNum = eval(orderResult[1].slice(0,1));
     /* 已定菜式名稱 */
     var menu = orderResult[1].slice(1);
     /* 提交當天菜式的截止時間 */
-    if ( !isDateChanged && ( confirmDate >= submitDeadline ) ) 
-      throw "吉時已過，無法修改當天訂餐！"
+    if ( !isDateChanged && ( confirmDate >= submitDeadline ) ) {
+      error += "吉時已過，無法修改當天訂餐！"
+      throw error
+    }
     /* 選擇不訂 */
     else if( menu == "none" ) 
       orderSheet.getRange(nameIndexInOrdRow, todayIndexInOrdCol).clearContent();
@@ -206,23 +208,25 @@ function submitOrder(orderResult){
         orderSheet.getRange(nameIndexInOrdRow, todayIndexInOrdCol + day - 1).setValue(menu);
     }
       
-    myLogger("INFO", orderResult.slice(1, 6).toString());
+    myLogger(orderResult[0], "INFO", orderResult.slice(1, 7).toString());
     
     if( error != "" ) {
       error += " 天點的菜已經被搶光了！其他餐已訂好！";
-      myLogger("ERROR", "提交出錯：" + error);
       throw error
     }
   }
   catch(e) {
+    myLogger(orderResult[0], "ERROR", "提交出錯：" + e);
     throw e;
   }
 }
 
-function myLogger(type, content) {
+function forcedRefresh(name) {
+  myLogger(name, "WARN", "掛機超時。");
+  SpreadsheetApp.getUi().alert("掛機超時！請重新打開訂餐頁面！");
+}
+
+function myLogger(name, type, content) {
   var date = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
-  if(userInfo != null)
-    logSheet.appendRow([userInfo.name, date, type, content]);
-  else
-    logSheet.appendRow(["", date, type, content]);
+  logSheet.appendRow([name, date, type, content]);
 }
