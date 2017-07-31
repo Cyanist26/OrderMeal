@@ -56,7 +56,7 @@ function showOrderDialog(){
   try{
     var html = HtmlService.createHtmlOutputFromFile('order')
       .setWidth(1300)
-      .setHeight(550);
+      .setHeight(650);
     SpreadsheetApp.getUi().showModalDialog(html, '  ');
   }
   catch(e){
@@ -108,8 +108,8 @@ function getUserInfo(){
 
 function getFormatedDateAndMenu(name){
   /* 調試模式，屏蔽其他用戶 */
-//  if( Session.getEffectiveUser().getEmail() != "cwq@ftofs.net")
-//    throw "休息片刻，馬上回來~"
+  if( Session.getEffectiveUser().getEmail() != "cwq@ftofs.net")
+    throw "休息片刻，馬上回來~"
   /* 加載日期所在列 */
   var todayIndexInOrdCol = FtofsStandardLibrary.getIndexByContent(true, formatToday, orderData)[0][1];
   /* 訂餐表中名字所在行 */
