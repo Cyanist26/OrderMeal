@@ -110,12 +110,13 @@
         google.script.run
           .withSuccessHandler(showUserInfo)
           .withFailureHandler(function (error) {
+            var userInfoObject = $("#userInfo");
             if( error.message == "#ERR_NOTFOUND" )
-              $("#userInfo").text("請使用個人郵箱登陸再訂餐！");
+              userInfoObject.text("請使用個人郵箱登陸再訂餐！");
             else
-              $("#userInfo").text("ERROR: " + error.message);
-              $("#userInfo").attr('style','display:none;');
-              $('#userInfo').fadeIn("slow");
+              userInfoObject.text("ERROR: " + error.message);
+              userInfoObject.attr('style','display:none;');
+              userInfoObject.fadeIn("slow");
             })
           .getUserInfo();
           
@@ -149,9 +150,10 @@
             var fixedMenu = formatedDateAndMenu[key][5];
             if( fixedMenu != "" && fixedMenu != "休" )
             {
-              $("#day" + i + "fixedMenu").html("<strong>&nbsp;&nbsp;素菜：" + fixedMenu + "</strong>");
-              $("#day" + i + "fixedMenu").addClass('am-text-danger');
-              $("#day" + i + "fixedMenu").css('display','block');
+              var fixedMenuObject = $("#day" + i + "fixedMenu");
+              fixedMenuObject.html("<strong>&nbsp;&nbsp;素菜：" + fixedMenu + "</strong>");
+              fixedMenuObject.addClass('am-text-danger');
+              fixedMenuObject.css('display','block');
             }
             
             /* 當天是否有已選項 */
@@ -265,9 +267,10 @@
       
       /* 訂餐成功顯示信息并更新radio */
         function submitSuccess(result, $btn) {
-          $("#ordresult").html("<strong>訂餐成功！</strong>");
-          $("#ordresult").attr('class','am-text-center am-text-lg am-text-warning');
-          $("#ordresult").fadeIn("fast");
+          var ordresultObject = $("#ordresult");
+          ordresultObject.html("<strong>訂餐成功！</strong>");
+          ordresultObject.attr('class','am-text-center am-text-lg am-text-warning');
+          ordresultObject.fadeIn("fast");
           $("input[value!='false']").uCheck('enable');
           $btn.button('reset');
           refreshMenu();
@@ -283,9 +286,10 @@
         function submitFailed(error, $btn) {
           errorCounter++;
           if( errorCounter <= 5 ) {
-            $("#ordresult").text("訂餐失敗，聽我解釋T^T：" + error.message);
-            $("#ordresult").attr('class','am-text-center am-text-lg am-text-danger');
-            $("#ordresult").fadeIn("slow");
+            var ordresultObject = $("#ordresult");
+            ordresultObject.text("訂餐失敗，聽我解釋T^T：" + error.message);
+            ordresultObject.attr('class','am-text-center am-text-lg am-text-danger');
+            ordresultObject.fadeIn("slow");
             $("input[value!='false']").uCheck('enable');
             $btn.button('reset');
             refreshMenu();
@@ -296,9 +300,10 @@
               $("#ordresult").fadeOut("slow");
             }, 5000);
           } else {
-            $("#forbiddenInfo").text("你已多次提交失敗，請仔細閱讀錯誤信息并聯繫行政部。訂餐失敗，聽我解釋T^T：" + error.message);
-            $("#forbiddenInfo").attr('class','am-text-center am-text-lg am-text-danger');
-            $("#forbiddenInfo").fadeIn("slow");
+            var forbiddenInfoObject = $("#forbiddenInfo");
+            forbiddenInfoObject.text("你已多次提交失敗，請仔細閱讀錯誤信息并聯繫行政部。訂餐失敗，聽我解釋T^T：" + error.message);
+            forbiddenInfoObject.attr('class','am-text-center am-text-lg am-text-danger');
+            forbiddenInfoObject.fadeIn("slow");
             var $w = $(window);
             $w.smoothScroll({position: $(document).height() - $w.height()});
           }
